@@ -1,0 +1,115 @@
+import { default as parse, CellRef } from './expr-parser.js';
+import { Result, okResult, errResult } from 'cs544-js-utils';
+
+export default async function makeSpreadsheet(name) {
+  return okResult(new Spreadsheet(name));
+}
+
+export class Spreadsheet {
+  constructor(name) {
+    this.name = name;
+    this.cells = {}; 
+    this.dependencies = {}; 
+  }
+
+  async eval(cellId, expr) {
+    const ast = parse(expr); 
+
+    const cellRefs = this.extractCellRefs(ast); 
+    if (this.hasCircularReference(cellId, cellRefs)) {
+      return errResult({
+        code: 'CIRCULAR_REF',
+        message: 'Circular reference detected.',
+      });
+    }
+
+    const updates = {};
+    this.evaluateAndUpdate(cellId, ast, updates);
+
+    return okResult(updates);
+  }
+
+  extractCellRefs(ast) {
+    const cellRefs = [];
+    this.traverseAst(ast, (node) => {
+      if (node instanceof CellRef) {
+        cellRefs.push(node);
+      }
+    });
+    return cellRefs;
+  }
+
+  hasCircularReference(cellId, cellRefs) {
+    if (!this.dependencies[cellId]) {
+      return false;
+    }
+    for (const ref of cellRefs) {
+      if (ref.id === cellId || this.hasCircularReference(ref.id, this.dependencies[cellId])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  evaluateAndUpdate(cellId, ast, updates) {
+    const cellValue = this.evaluate(ast); 
+    this.cells[cellId] = cellValue; 
+    updates[cellId] = cellValue; 
+    
+    if (this.dependencies[cellId]) {
+      for (const dependentCellId of this.dependencies[cellId]) {
+        const dependentAst = this.cells[dependentCellId];
+        this.evaluateAndUpdate(dependentCellId, dependentAst, updates);
+      }
+    }
+  }
+
+  evaluate(ast) {
+    if (ast.type === 'literal') {
+      return ast.value; 
+    } else if (ast instanceof CellRef) {
+      return this.cells[ast.id]; 
+    } else if (ast.type === 'binaryOp') {
+      const leftValue = this.evaluate(ast.left);
+      const rightValue = this.evaluate(ast.right);
+      const operatorFn = FNS[ast.operator];
+      return operatorFn(leftValue, rightValue); 
+    } else if (ast.type === 'functionCall') {
+      const args = ast.args.map((arg) => this.evaluate(arg));
+      const functionFn = FNS[ast.name];
+      return functionFn(...args); 
+    }
+  }
+
+  traverseAst(ast, callback) {
+    callback(ast);
+    if (ast.left) {
+      this.traverseAst(ast.left, callback);
+    }
+    if (ast.right) {
+      this.traverseAst(ast.right, callback);
+    }
+    if (ast.args) {
+      for (const arg of ast.args) {
+        this.traverseAst(arg, callback);
+      }
+    }
+  }
+
+  setCellValue(cellId, value) {
+    this.cells[cellId] = value;
+  }
+
+  getCellValue(cellId) {
+    return this.cells[cellId];
+  }
+}
+
+const FNS = {
+  '+': (a, b) => a + b,
+  '-': (a, b) => a - b,
+  '*': (a, b) => a * b,
+  '/': (a, b) => a / b,
+  min: Math.min,
+  max: Math.max,
+};
