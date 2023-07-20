@@ -1,0 +1,1 @@
+{"version":3,"file":"ss-ws.d.ts","sourceRoot":"","sources":["../../src/lib/ss-ws.ts"],"names":[],"mappings":"AACA,OAAO,OAAO,MAAM,SAAS,CAAC;AAO9B,OAAO,EAAE,mBAAmB,IAAI,UAAU,EAAE,MAAM,gBAAgB,CAAC;AAKnE,MAAM,MAAM,GAAG,GAAG,OAAO,CAAC,WAAW,CAAC;AAGtC,wBAAgB,OAAO,CAAC,UAAU,EAAE,UAAU,EAAE,IAAI,SAAS,GACzD,GAAG,CAON"}
