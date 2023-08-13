@@ -1,6 +1,6 @@
 import { Result, Err, okResult } from 'cs544-js-utils';
 
-import { Errors, makeElement } from './utils.js';
+import * as utilsJs from './utils.js';
 
 import SpreadsheetWs from './ss-ws.js';
 
@@ -12,7 +12,7 @@ export default async function makeApp(wsUrl: string) {
 }
 
 function setupLoadFormHandler() {
-  const errors = new Errors();
+  const errors = new utilsJs.Errors();
   const wsUrlInput = document.querySelector('#ws-url') as HTMLInputElement;
   const ssNameInput = document.querySelector('#ss-name') as HTMLInputElement;
   let ws: SpreadsheetWs;
@@ -30,7 +30,7 @@ function setupLoadFormHandler() {
     }
     else {
       const ws = SpreadsheetWs.make(wsUrl);
-      await makeSpreadsheet(ws, ssName);
+      await makeSpreadsheet({ws, ssName});
     }
   });
 }
@@ -59,27 +59,27 @@ function setupLoadFormHandler() {
 function makeTopLevelUI(wsUrl: string) {
 
   function makeLoadForm(wsUrl: string) {
-    const form = makeElement('form', { class: 'form', id: 'ss-form' });
+    const form = utilsJs.makeElement('form', { class: 'form', id: 'ss-form' });
 
-    form.append(makeElement('label', {for: 'ws-url'}, 'Web Services URL'));
-    form.append(makeElement('input', {name: 'ws-url', id: 'ws-url',
+    form.append(utilsJs.makeElement('label', {for: 'ws-url'}, 'Web Services URL'));
+    form.append(utilsJs.makeElement('input', {name: 'ws-url', id: 'ws-url',
 				      value: wsUrl}));
 
-    form.append(makeElement('label', {for: 'ss-name'}, 'Spreadsheet Name'));
-    form.append(makeElement('input', {name: 'ss-name', id: 'ss-name'}));
+    form.append(utilsJs.makeElement('label', {for: 'ss-name'}, 'Spreadsheet Name'));
+    form.append(utilsJs.makeElement('input', {name: 'ss-name', id: 'ss-name'}));
 
-    form.append(makeElement('label'));
-    form.append(makeElement('button', {type: 'submit'}, 'Load Spreadsheet'));
+    form.append(utilsJs.makeElement('label'));
+    form.append(utilsJs.makeElement('button', {type: 'submit'}, 'Load Spreadsheet'));
     return form;
   }
 
   const app = document.querySelector('#app')!;
   app.append(makeLoadForm(wsUrl));
 
-  app.append(makeElement('ul', { class: 'error', id: 'errors' }));
+  app.append(utilsJs.makeElement('ul', { class: 'error', id: 'errors' }));
 
   //spreadsheet table should be rendered within this div
-  app.append(makeElement('div', {id: 'ss'}));
+  app.append(utilsJs.makeElement('div', {id: 'ss'}));
 
 }
   
